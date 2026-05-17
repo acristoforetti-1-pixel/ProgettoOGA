@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  /* Color Palette - Fedrigoni Inspired (Minimalist, High Contrast) */
+  --color-bg-base: #ffffff;
+  --color-bg-surface: #f8f9fa;
+  --color-bg-surface-hover: #f1f3f5;
+  
+  /* Primary brand colors */
+  --color-primary: #000000; 
+  --color-primary-hover: #333333;
+  
+  /* Accent colors */
+  --color-accent: #e50012; 
+  --color-accent-hover: #b3000e;
+  
+  /* Status colors */
+  --color-success: #198754;
+  --color-warning: #ffc107;
+  --color-danger: #dc3545;
+
+  /* Typography */
+  --color-text-primary: #000000;
+  --color-text-secondary: #495057;
+  --color-text-muted: #6c757d;
+  
+  /* Borders */
+  --color-border: #dee2e6;
+  
+  /* Border Radius */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-full: 9999px;
+  
+  /* Layout */
+  --sidebar-width: 280px;
+  --header-height: 80px;
+  
+  --transition-fast: 150ms ease-in-out;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.glass-panel {
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-bg-base);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  background: white;
+}

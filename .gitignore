@@ -1,0 +1,5 @@
+node_modules/
+/DaAnalizzare.xlsx
+/scratch/
+.env
+dist/
