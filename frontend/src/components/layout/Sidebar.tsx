@@ -18,7 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   return (
     <aside className="layout-sidebar">
       <div className="sidebar-logo">
-        <h1>OGA Shift</h1>
+        <h1>FEDRIGONI PLANNER</h1>
       </div>
       <nav className="sidebar-nav">
         {/* Workers only */}

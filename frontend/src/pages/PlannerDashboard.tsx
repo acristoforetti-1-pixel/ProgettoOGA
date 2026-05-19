@@ -118,7 +118,7 @@ const PlannerDashboard: React.FC = () => {
     <div>
       <div className="page-header">
         <h1 className="page-title">Gestione Planning</h1>
-        <p className="page-subtitle">Reparto Produzione - Settimana dal {new Date(selectedDate).toLocaleDateString()}</p>
+        <p className="page-subtitle">Settimana dal {new Date(selectedDate).toLocaleDateString()}</p>
       </div>
 
       <div className="planner-toolbar">

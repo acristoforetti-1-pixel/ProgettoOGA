@@ -12,13 +12,37 @@ const OperatorDashboard: React.FC = () => {
   // Use real logged in employee ID from context
   const loggedInEmployeeId = user?.employeeId;
 
+  const getWeekRange = () => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  };
+
+  const formatItalianDate = (date: Date, includeYear = false) => {
+    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
+    if (includeYear) options.year = 'numeric';
+    const formatted = date.toLocaleDateString('it-IT', options);
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  };
+
+  const weekRange = getWeekRange();
+  const weekLabel = `${formatItalianDate(weekRange.start)} - ${formatItalianDate(weekRange.end, true)}`;
+
+  const isInWeekRange = (dateString: string) => {
+    const d = new Date(dateString);
+    return d >= weekRange.start && d <= weekRange.end;
+  };
+
   const loadData = () => {
     setLoading(true);
     fetchShifts().then((shiftData) => {
-      // Filter shifts
+      // Filter shifts for logged-in user inside the current week range
       const myShifts = shiftData.filter(s => {
         const emp = s.employee as Employee;
-        return emp?.employeeId === loggedInEmployeeId;
+        return emp?.employeeId === loggedInEmployeeId && isInWeekRange(s.date);
       });
       myShifts.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       setShifts(myShifts);
@@ -33,8 +57,6 @@ const OperatorDashboard: React.FC = () => {
     loadData();
   }, []);
 
-  
-
   const formatDate = (dateString: string) => {
     const d = new Date(dateString);
     const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
@@ -44,7 +66,7 @@ const OperatorDashboard: React.FC = () => {
     <div>
       <div className="page-header">
         <h1 className="page-title">I Miei Turni</h1>
-        <p className="page-subtitle">Settimana 14 Maggio - 20 Maggio 2026</p>
+        <p className="page-subtitle">Settimana {weekLabel}</p>
       </div>
 
       <div className="dashboard-grid">

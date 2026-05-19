@@ -29,7 +29,7 @@ const Login: React.FC = () => {
   return (
     <div className="login-container">
       <div className="login-card glass-panel">
-        <div className="login-logo">OGA</div>
+        <div className="login-logo">FEDRIGONI</div>
         <h2 style={{ marginBottom: '0.5rem' }}>Benvenuto</h2>
         <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', fontSize: '0.9rem' }}>
           Inserisci le tue credenziali per accedere
