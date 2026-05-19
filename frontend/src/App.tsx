@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import MainLayout from './components/layout/MainLayout';
 import PlannerDashboard from './pages/PlannerDashboard';
 import OperatorDashboard from './pages/OperatorDashboard';
+import OperatorRequests from './pages/OperatorRequests';
 import CompetenceMatrix from './pages/CompetenceMatrix';
 import AbsenceManager from './pages/AbsenceManager';
 import Login from './pages/Login';
@@ -28,6 +29,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to={user?.role === 'OPERATOR' ? '/operator' : '/planner'} />} />
         <Route path="operator" element={<OperatorDashboard />} />
+        <Route path="operator/requests" element={<OperatorRequests />} />
         
         {/* Planner/Admin only routes */}
         <Route path="planner" element={
