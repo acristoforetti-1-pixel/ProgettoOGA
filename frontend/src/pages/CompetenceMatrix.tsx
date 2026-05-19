@@ -1,21 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { fetchCompetences } from '../api';
-import type { Competence, Employee } from '../api';
+import { fetchCompetences, fetchWorkstations } from '../api';
+import type { Competence, Employee, Workstation } from '../api';
 import './Dashboard.css';
 
 const CompetenceMatrix: React.FC = () => {
   const [competences, setCompetences] = useState<Competence[]>([]);
+  const [workstations, setWorkstations] = useState<Workstation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCompetences()
-      .then((data) => {
-        setCompetences(data);
+    Promise.all([fetchCompetences(), fetchWorkstations()])
+      .then(([compData, wsData]) => {
+        setCompetences(compData);
+        setWorkstations(wsData || []);
         setLoading(false);
       })
       .catch((err) => {
-        console.error('Error fetching competences', err);
+        console.error('Error fetching competences or workstations', err);
         setLoading(false);
       });
   }, []);
@@ -34,37 +36,84 @@ const CompetenceMatrix: React.FC = () => {
 
   const rows = Array.from(employeeMap.values());
 
+  // Column visibility and pagination
+  const columnsPerPage = 8;
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [visibleCols, setVisibleCols] = useState<Record<string, boolean>>({});
+
+  // Initialize visibleCols to true for all workstations
+  useEffect(() => {
+    const vis: Record<string, boolean> = {};
+    workstations.forEach(ws => { vis[ws.name] = visibleCols[ws.name] ?? true; });
+    setVisibleCols(vis);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workstations.length]);
+
+  const visibleWorkstations = useMemo(() => workstations.filter(ws => visibleCols[ws.name] !== false), [workstations, visibleCols]);
+  const totalPages = Math.max(1, Math.ceil(visibleWorkstations.length / columnsPerPage));
+  const clampedPage = Math.min(currentPage, totalPages - 1);
+
+  useEffect(() => { if (clampedPage !== currentPage) setCurrentPage(clampedPage); }, [clampedPage]);
+
+  const pageStart = clampedPage * columnsPerPage;
+  const pagedWorkstations = visibleWorkstations.slice(pageStart, pageStart + columnsPerPage);
+
   if (loading) return <div className="p-6">Caricamento competenze in corso...</div>;
   return (
     <div>
       <div className="page-header">
         <h1 className="page-title">Matrice Competenze</h1>
-        <p className="page-subtitle">Reparto Produzione - Mappatura Skill Operative e HSE</p>
+        <p className="page-subtitle">Mappatura Skill Operative e HSE</p>
       </div>
 
-      <div className="glass-panel" style={{ overflowX: 'auto', marginTop: '2rem' }}>
-        <table className="schedule-grid">
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', marginTop: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button className="btn" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={clampedPage === 0}>←</button>
+          <div>Pagina {clampedPage + 1} / {totalPages}</div>
+          <button className="btn" onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage === totalPages - 1}>→</button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <button className="btn" onClick={() => setPickerOpen(o => !o)}>Column Picker</button>
+            {pickerOpen && (
+              <div className="column-picker">
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <button className="btn small" onClick={() => { const next: Record<string, boolean> = {}; Object.keys(visibleCols).forEach(k => next[k] = true); setVisibleCols(next); }}>Select All</button>
+                  <button className="btn small" onClick={() => { const next: Record<string, boolean> = {}; Object.keys(visibleCols).forEach(k => next[k] = false); setVisibleCols(next); }}>Clear</button>
+                </div>
+                <div className="picker-list">
+                  {workstations.map(ws => (
+                    <label key={ws._id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <input type="checkbox" checked={visibleCols[ws.name] ?? true} onChange={e => setVisibleCols(prev => ({ ...prev, [ws.name]: e.target.checked }))} />
+                      <span>{ws.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="glass-panel matrix-container" style={{ overflowX: 'auto', marginTop: '1rem' }}>
+        <table className="schedule-grid matrix-table">
           <thead>
             <tr>
-              <th>Operatore</th>
-              <th>SPM02 C</th>
-              <th>SPM02 SC</th>
-              <th>BOB 1.1</th>
-              <th>CARICO</th>
-              <th>MULETTO</th>
-              <th>RIB 01</th>
+              <th className="sticky-col">Operatore</th>
+              {pagedWorkstations.map((ws) => (
+                <th key={ws._id}>{ws.name}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.employee._id}>
-                <td className="cell-shift-name">{row.employee.lastName} {row.employee.firstName.charAt(0)}.</td>
-                <td><StatusBadge level={row.skills['SPM02 C'] || 0} /></td>
-                <td><StatusBadge level={row.skills['SPM02 SC'] || 0} /></td>
-                <td><StatusBadge level={row.skills['BOB 1.1'] || 0} /></td>
-                <td><StatusBadge level={row.skills['CARICO'] || 0} /></td>
-                <td><StatusBadge level={row.skills['ABILITAZ. MULETTO'] || 0} /></td>
-                <td><StatusBadge level={row.skills['RIB 01'] || 0} /></td>
+                <td className="cell-shift-name sticky-col">{row.employee.lastName} {row.employee.firstName.charAt(0)}.</td>
+                {pagedWorkstations.map(ws => (
+                  <td key={ws._id}><StatusBadge level={row.skills[ws.name] || 0} /></td>
+                ))}
               </tr>
             ))}
           </tbody>

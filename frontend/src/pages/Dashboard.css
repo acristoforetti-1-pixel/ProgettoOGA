@@ -115,6 +115,25 @@
   border-collapse: collapse;
 }
 
+/* Matrix specific improvements */
+.matrix-container { position: relative; }
+.matrix-table th, .matrix-table td { white-space: nowrap; }
+
+/* Sticky header */
+.schedule-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+}
+
+/* Freeze first column */
+.sticky-col {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 7;
+}
+
 .schedule-grid th, .schedule-grid td {
   padding: 1.25rem;
   border: 1px solid var(--color-border);
@@ -129,6 +148,27 @@
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
 }
+
+/* Column picker dropdown */
+.column-picker {
+  position: absolute;
+  right: 0;
+  top: 38px;
+  background: white;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  padding: 0.75rem;
+  width: 260px;
+  max-height: 320px;
+  overflow: auto;
+  z-index: 50;
+}
+.picker-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+/* small btn */
+.btn.small { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
+
+.schedule-grid th, .schedule-grid td { transition: background 0.15s ease; }
 
 .cell-shift-name {
   font-weight: 700;
