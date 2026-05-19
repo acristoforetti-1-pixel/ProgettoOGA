@@ -7,6 +7,8 @@ export interface IEmployee extends Document {
   department: string; // e.g., 'Coating', 'Converting'
   role: string; // Native role, e.g., 'Assistente', 'Capo Reparto'
   isActive: boolean;
+  hseLimitations?: string[]; // Workstations this employee cannot work at
+  maxWeeklyHours?: number;
 }
 
 const EmployeeSchema: Schema = new Schema({
@@ -16,6 +18,8 @@ const EmployeeSchema: Schema = new Schema({
   department: { type: String, required: true },
   role: { type: String, required: true },
   isActive: { type: Boolean, default: true },
+  hseLimitations: { type: [String], default: [] },
+  maxWeeklyHours: { type: Number, default: 40 },
 }, { timestamps: true });
 
 export default mongoose.model<IEmployee>('Employee', EmployeeSchema);

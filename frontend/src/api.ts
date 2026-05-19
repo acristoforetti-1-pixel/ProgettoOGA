@@ -30,6 +30,15 @@ export interface Shift {
   workstation: string;
 }
 
+export interface Workstation {
+  _id: string;
+  name: string;
+  department?: string;
+  isCritical: boolean;
+  defaultRequiredCount: number;
+  skipsNight: boolean;
+}
+
 export const fetchEmployees = async () => {
   const response = await api.get<Employee[]>('/employees');
   return response.data;
@@ -42,6 +51,11 @@ export const fetchCompetences = async () => {
 
 export const fetchShifts = async () => {
   const response = await api.get<Shift[]>('/schedule');
+  return response.data;
+};
+
+export const fetchWorkstations = async () => {
+  const response = await api.get<Workstation[]>('/workstations');
   return response.data;
 };
 

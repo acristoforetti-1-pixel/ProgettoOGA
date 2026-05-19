@@ -9,6 +9,7 @@ import User from './models/User';
 import Competence from './models/Competence';
 import ShiftAssignment from './models/ShiftAssignment';
 import Absence, { AbsenceStatus } from './models/Absence';
+import Workstation from './models/Workstation';
 import { generateSchedule } from './services/scheduler';
 
 dotenv.config();
@@ -93,6 +94,16 @@ app.get('/api/competences', protect, async (req, res) => {
   try {
     const competences = await Competence.find({}).populate('employee');
     res.json(competences);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+// Workstations
+app.get('/api/workstations', protect, async (req, res) => {
+  try {
+    const workstations = await Workstation.find({});
+    res.json(workstations);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
   }
