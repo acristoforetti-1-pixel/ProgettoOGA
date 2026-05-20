@@ -17,6 +17,12 @@ const OperatorRequests: React.FC = () => {
   const loggedInEmployeeId = user?.employeeId;
 
   const loadData = () => {
+    if (!loggedInEmployeeId) {
+      setMyAbsences([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     fetchAbsences().then((absData: any[]) => {
       const myAbs = absData.filter(a => a.employee?.employeeId === loggedInEmployeeId);
@@ -30,10 +36,13 @@ const OperatorRequests: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loggedInEmployeeId]);
 
   const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!loggedInEmployeeId) {
+      return alert('Problema con l’account: riprova il login.');
+    }
     if (!startDate || !endDate) return alert('Seleziona le date');
 
     setSubmitting(true);

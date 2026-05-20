@@ -76,16 +76,20 @@ const CompetenceMatrix: React.FC = () => {
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
-            <button className="btn" onClick={() => setPickerOpen(o => !o)}>Column Picker</button>
+            <button className="btn" onClick={() => setPickerOpen(o => !o)}>Gestisci colonne</button>
             {pickerOpen && (
               <div className="column-picker">
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <button className="btn small" onClick={() => { const next: Record<string, boolean> = {}; Object.keys(visibleCols).forEach(k => next[k] = true); setVisibleCols(next); }}>Select All</button>
-                  <button className="btn small" onClick={() => { const next: Record<string, boolean> = {}; Object.keys(visibleCols).forEach(k => next[k] = false); setVisibleCols(next); }}>Clear</button>
+                <div className="picker-header">
+                  <strong>Seleziona colonne</strong>
+                  <span className="picker-note">Mostra o nascondi i reparti visibili</span>
+                </div>
+                <div className="picker-actions">
+                  <button className="btn small" onClick={() => { const next: Record<string, boolean> = {}; Object.keys(visibleCols).forEach(k => next[k] = true); setVisibleCols(next); }}>Mostra tutte</button>
+                  <button className="btn small" onClick={() => { const next: Record<string, boolean> = {}; Object.keys(visibleCols).forEach(k => next[k] = false); setVisibleCols(next); }}>Nascondi tutte</button>
                 </div>
                 <div className="picker-list">
                   {workstations.map(ws => (
-                    <label key={ws._id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <label key={ws._id} className="picker-item">
                       <input type="checkbox" checked={visibleCols[ws.name] ?? true} onChange={e => setVisibleCols(prev => ({ ...prev, [ws.name]: e.target.checked }))} />
                       <span>{ws.name}</span>
                     </label>

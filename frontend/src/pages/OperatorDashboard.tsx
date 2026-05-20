@@ -37,6 +37,12 @@ const OperatorDashboard: React.FC = () => {
   };
 
   const loadData = () => {
+    if (!loggedInEmployeeId) {
+      setShifts([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     fetchShifts().then((shiftData) => {
       // Filter shifts for logged-in user inside the current week range
@@ -55,7 +61,7 @@ const OperatorDashboard: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loggedInEmployeeId]);
 
   const formatDate = (dateString: string) => {
     const d = new Date(dateString);

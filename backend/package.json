@@ -19,8 +19,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.6.2",
-    "xlsx": "^0.18.5"
+    "mongoose": "^9.6.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

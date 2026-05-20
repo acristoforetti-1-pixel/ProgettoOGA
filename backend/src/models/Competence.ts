@@ -14,7 +14,6 @@ const CompetenceSchema: Schema = new Schema({
   validUntil: { type: Date },
 }, { timestamps: true });
 
-// Ensure an employee only has one entry per workstation
 CompetenceSchema.index({ employee: 1, workstation: 1 }, { unique: true });
 
 export default mongoose.model<ICompetence>('Competence', CompetenceSchema);

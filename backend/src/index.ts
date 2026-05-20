@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import connectDB from './config/db';
-import Employee from './models/Employee';
+import Employee, { IEmployee } from './models/Employee';
 import User from './models/User';
 import Competence from './models/Competence';
 import ShiftAssignment from './models/ShiftAssignment';
@@ -54,8 +54,9 @@ app.post('/api/auth/login', async (req, res) => {
     const user = await User.findOne({ username }).populate('employee');
     
     if (user && (await bcrypt.compare(password, user.password))) {
+      const employee = user.employee as unknown as IEmployee;
       const token = jwt.sign(
-        { id: user._id, role: user.role, employeeId: user.employee?.employeeId },
+        { id: user._id, role: user.role, employeeId: employee?.employeeId },
         JWT_SECRET,
         { expiresIn: '30d' }
       );
@@ -64,9 +65,9 @@ app.post('/api/auth/login', async (req, res) => {
         _id: user._id,
         username: user.username,
         role: user.role,
-        firstName: user.employee?.firstName || user.username,
-        lastName: user.employee?.lastName || '',
-        employeeId: user.employee?.employeeId,
+        firstName: employee?.firstName || user.username,
+        lastName: employee?.lastName || '',
+        employeeId: employee?.employeeId,
         token
       });
     } else {

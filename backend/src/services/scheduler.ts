@@ -18,7 +18,7 @@ export const generateSchedule = async (startDate: Date, days: number = 7) => {
   const approvedAbsences = await Absence.find({ status: AbsenceStatus.APPROVED });
 
   const eligibleMap = new Map<string, { level1_2: string[], level3: string[] }>();
-  
+
   competences.forEach(comp => {
     if (!eligibleMap.has(comp.workstation)) {
       eligibleMap.set(comp.workstation, { level1_2: [], level3: [] });
@@ -37,8 +37,7 @@ export const generateSchedule = async (startDate: Date, days: number = 7) => {
 
   const scheduledShifts: ScheduledShift[] = [];
   const shiftTimes = ['05:00 - 13:00', '13:00 - 21:00', '21:00 - 05:00'];
-  
-  // Full requirements list expanded with the latest "mansioni" list
+
   const workstations = await Workstation.find({});
   const dailyRequirements = workstations.map(ws => ({
     name: ws.name,
@@ -53,7 +52,7 @@ export const generateSchedule = async (startDate: Date, days: number = 7) => {
     const currentDate = new Date(startDate);
     currentDate.setDate(currentDate.getDate() + dayOffset);
     const dateStr = currentDate.toISOString().split('T')[0];
-    
+
     const yesterday = new Date(currentDate);
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
@@ -73,7 +72,7 @@ export const generateSchedule = async (startDate: Date, days: number = 7) => {
         let assignedL1Count = 0;
         let assignedL3Count = 0;
 
-        // Pass 1: Assign Level 1/2 (Autonomous)
+        // Passaggio 1: Assegno Level 1/2
         for (const empId of eligibleLevel1_2) {
           if (assignedL1Count >= req.requiredCount) break;
           if (assignedToday.has(empId)) continue;
@@ -81,18 +80,18 @@ export const generateSchedule = async (startDate: Date, days: number = 7) => {
           const emp = employees.find(e => e._id.toString() === empId);
           if (!emp) continue;
 
-          // Absence check
-          const isAbsent = approvedAbsences.some(abs => 
-            abs.employee.toString() === empId && 
-            currentDate >= abs.startDate && 
+          // Verifica Assenze
+          const isAbsent = approvedAbsences.some(abs =>
+            abs.employee.toString() === empId &&
+            currentDate >= abs.startDate &&
             currentDate <= abs.endDate
           );
           if (isAbsent) continue;
 
-          // HSE Limitation Check
+          // Verifica HSE Limitation
           if (emp.hseLimitations && emp.hseLimitations.includes(req.name)) continue;
 
-          // Rest constraint (11h rule)
+          // Verifica Riposo (11h)
           const yesterdayShift = tracking.get(empId)?.[yesterdayStr];
           if (yesterdayShift === '21:00 - 05:00' && shiftTime !== '21:00 - 05:00') continue;
           if (yesterdayShift === '13:00 - 21:00' && shiftTime === '05:00 - 13:00') continue;
@@ -104,34 +103,34 @@ export const generateSchedule = async (startDate: Date, days: number = 7) => {
             shiftTime,
             workstation: req.name
           });
-          
+
           assignedToday.add(empId);
           assignedL1Count++;
-          
+
           if (!tracking.has(empId)) tracking.set(empId, {});
           tracking.get(empId)![dateStr] = shiftTime;
         }
 
-        // Pass 2: Assign Level 3 (Training) ONLY IF a Level 1/2 is already assigned
+        // Passaggio 2: Assegno Level 3 (Solo se è già stato assegnato un 1/2)
         if (assignedL1Count > 0) {
           for (const empId of eligibleLevel3) {
-            if (assignedL3Count >= 1) break; 
+            if (assignedL3Count >= 1) break;
             if (assignedToday.has(empId)) continue;
 
             const emp = employees.find(e => e._id.toString() === empId);
             if (!emp) continue;
 
-            const isAbsent = approvedAbsences.some(abs => 
-              abs.employee.toString() === empId && 
-              currentDate >= abs.startDate && 
+            const isAbsent = approvedAbsences.some(abs =>
+              abs.employee.toString() === empId &&
+              currentDate >= abs.startDate &&
               currentDate <= abs.endDate
             );
             if (isAbsent) continue;
 
-            // HSE Limitation Check
+            // Verifica HSE Limitation
             if (emp.hseLimitations && emp.hseLimitations.includes(req.name)) continue;
 
-            // Rest constraint (11h rule)
+            // Verifica Riposo (11h)
             const yesterdayShift = tracking.get(empId)?.[yesterdayStr];
             if (yesterdayShift === '21:00 - 05:00' && shiftTime !== '21:00 - 05:00') continue;
             if (yesterdayShift === '13:00 - 21:00' && shiftTime === '05:00 - 13:00') continue;
@@ -143,16 +142,16 @@ export const generateSchedule = async (startDate: Date, days: number = 7) => {
               shiftTime,
               workstation: req.name
             });
-            
+
             assignedToday.add(empId);
             assignedL3Count++;
-            
+
             if (!tracking.has(empId)) tracking.set(empId, {});
             tracking.get(empId)![dateStr] = shiftTime;
           }
         }
 
-        // Alert if critical requirement not met
+        // Alert se la posizione non viene coperta
         if (assignedL1Count < req.requiredCount) {
           console.warn(`[WARNING] Non è stato possibile coprire ${req.name} nel turno ${shiftTime} del ${dateStr} a causa di carenza personale o assenze.`);
         }

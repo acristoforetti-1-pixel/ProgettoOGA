@@ -48,7 +48,7 @@ const seedData = async () => {
     const bulkEmployees: any[] = [];
     const departments = ['Produzione', 'Converting', 'Coating', 'Logistica', 'Magazzino', 'Qualità'];
     let id = 1000;
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 300; i++) {
       id += 1;
       const empId = String(id);
       const dept = departments[i % departments.length];

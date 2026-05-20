@@ -14,7 +14,6 @@ const ShiftAssignmentSchema: Schema = new Schema({
   workstation: { type: String, required: true },
 }, { timestamps: true });
 
-// An employee can only have one shift per day
 ShiftAssignmentSchema.index({ employee: 1, date: 1 }, { unique: true });
 
 export default mongoose.model<IShiftAssignment>('ShiftAssignment', ShiftAssignmentSchema);
