@@ -100,6 +100,32 @@ app.get('/api/competences', protect, async (req, res) => {
   }
 });
 
+app.put('/api/competences/:employeeId', protect, authorize('PLANNER', 'ADMIN'), async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const { skills } = req.body; // Expects an object { [workstationName]: level }
+    
+    // Convert employeeId to Employee _id
+    const emp = await Employee.findById(employeeId);
+    if (!emp) return res.status(404).json({ message: 'Employee not found' });
+
+    // Update or create competences
+    for (const [workstation, level] of Object.entries(skills)) {
+      if (typeof level === 'number') {
+        await Competence.findOneAndUpdate(
+          { employee: emp._id, workstation },
+          { level },
+          { upsert: true, new: true }
+        );
+      }
+    }
+    
+    res.json({ message: 'Competences updated successfully' });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Workstations
 app.get('/api/workstations', protect, async (req, res) => {
   try {

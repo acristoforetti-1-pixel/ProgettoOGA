@@ -49,6 +49,11 @@ export const fetchCompetences = async () => {
   return response.data;
 };
 
+export const updateCompetences = async (employeeId: string, skills: Record<string, number>) => {
+  const response = await api.put(`/competences/${employeeId}`, { skills });
+  return response.data;
+};
+
 export const fetchShifts = async () => {
   const response = await api.get<Shift[]>('/schedule');
   return response.data;

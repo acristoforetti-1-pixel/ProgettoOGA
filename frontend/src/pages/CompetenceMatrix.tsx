@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { fetchCompetences, fetchWorkstations } from '../api';
+import { CheckCircle, XCircle, AlertCircle, Settings } from 'lucide-react';
+import { fetchCompetences, fetchWorkstations, updateCompetences } from '../api';
 import type { Competence, Employee, Workstation } from '../api';
 import './Dashboard.css';
 
@@ -8,6 +8,8 @@ const CompetenceMatrix: React.FC = () => {
   const [competences, setCompetences] = useState<Competence[]>([]);
   const [workstations, setWorkstations] = useState<Workstation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingEmployee, setEditingEmployee] = useState<{ employee: Employee, skills: Record<string, number> } | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     Promise.all([fetchCompetences(), fetchWorkstations()])
@@ -21,6 +23,22 @@ const CompetenceMatrix: React.FC = () => {
         setLoading(false);
       });
   }, []);
+
+  const handleSaveCompetences = async () => {
+    if (!editingEmployee) return;
+    setSaving(true);
+    try {
+      await updateCompetences(editingEmployee.employee._id, editingEmployee.skills);
+      const newComps = await fetchCompetences();
+      setCompetences(newComps);
+      setEditingEmployee(null);
+    } catch (err) {
+      console.error('Error saving competences', err);
+      alert('Errore durante il salvataggio');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Group competences by employee
   const employeeMap = new Map<string, { employee: Employee, skills: Record<string, number> }>();
@@ -38,6 +56,7 @@ const CompetenceMatrix: React.FC = () => {
 
   // Column visibility and pagination
   const columnsPerPage = 8;
+
   const [currentPage, setCurrentPage] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState<Record<string, boolean>>({});
@@ -114,7 +133,18 @@ const CompetenceMatrix: React.FC = () => {
           <tbody>
             {rows.map((row) => (
               <tr key={row.employee._id}>
-                <td className="cell-shift-name sticky-col">{row.employee.lastName} {row.employee.firstName.charAt(0)}.</td>
+                <td className="cell-shift-name sticky-col">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>{row.employee.lastName} {row.employee.firstName.charAt(0)}.</span>
+                    <button 
+                      onClick={() => setEditingEmployee({ employee: row.employee, skills: { ...row.skills } })}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '4px', display: 'flex' }}
+                      title="Modifica Competenze"
+                    >
+                      <Settings size={16} />
+                    </button>
+                  </div>
+                </td>
                 {pagedWorkstations.map(ws => (
                   <td key={ws._id}><StatusBadge level={row.skills[ws.name] || 0} /></td>
                 ))}
@@ -123,6 +153,41 @@ const CompetenceMatrix: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {editingEmployee && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="glass-panel" style={{ width: '95%', maxWidth: '1200px', maxHeight: '85vh', overflowY: 'auto', padding: '2rem' }}>
+            <h2 style={{ marginTop: 0, marginBottom: '1.5rem', color: 'var(--color-text-primary)' }}>
+              Modifica Competenze: {editingEmployee.employee.firstName} {editingEmployee.employee.lastName}
+            </h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+              {workstations.map(ws => (
+                <div key={ws._id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>{ws.name}</label>
+                  <select 
+                    value={editingEmployee.skills[ws.name] || 0}
+                    onChange={e => setEditingEmployee(prev => prev ? { ...prev, skills: { ...prev.skills, [ws.name]: parseInt(e.target.value, 10) } } : prev)}
+                    className="form-input"
+                    style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}
+                  >
+                    <option value={0}>Non abilitato (-)</option>
+                    <option value={1}>Abilitato</option>
+                    <option value={2}>Addestrato</option>
+                    <option value={3}>In Addestramento</option>
+                    <option value={4}>Limitazioni</option>
+                  </select>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button className="btn" style={{ backgroundColor: 'transparent', border: '1px solid var(--color-border)' }} onClick={() => setEditingEmployee(null)} disabled={saving}>Annulla</button>
+              <button className="btn btn-primary" onClick={handleSaveCompetences} disabled={saving}>{saving ? 'Salvataggio...' : 'Salva Competenze'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
