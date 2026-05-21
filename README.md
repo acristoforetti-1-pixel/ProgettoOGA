@@ -1,14 +1,12 @@
 # Progetto OGA - Workforce Management per Fedrigoni
 
-Questo repository contiene il prototipo completo di un sistema di Workforce Management ispirato al report `G21ProgettoOGA.pdf`.
+Questo repository contiene il prototipo completo di un sistema di Workforce Management.
 Il progetto è stato sviluppato per il caso Fedrigoni Self-Adhesives Arco e si concentra su:
 - pianificazione turni e assegnazione postazioni,
 - gestione delle competenze e della qualification matrix,
 - controllo delle assenze e permessi,
 - supporto decisionale basato su vincoli operativi,
 - interfaccia operatore e planner.
-
-> Il file `G21ProgettoOGA.pdf` è il report accademico che contiene l'analisi del caso, il benchmark vendor, i framework teorici (Kraljic, make-or-buy, decision support, DMAIC) e le raccomandazioni strategiche.
 
 ## Architettura del progetto
 
@@ -72,7 +70,7 @@ La logica di scheduling implementata richiede che il sistema generi una proposta
 Dal root del repository:
 
 ```bash
-cd d:\TestProgettoOGA
+cd d:\ProgettoOGA
 npm install
 ```
 
@@ -167,7 +165,6 @@ npm run dev
 
 - `backend/` — server Express, autenticazione, scheduler, modelli Mongoose.
 - `frontend/` — applicazione React, autenticazione, pagine e componenti UI.
-- `G21ProgettoOGA.pdf` — report di riferimento con analisi teorica, benchmark, framework, roadmap DMAIC e conclusioni.
 
 ## Note tecniche
 
