@@ -1,5 +1,7 @@
 # Progetto OGA - Workforce Management per Fedrigoni
 
+Questa versione (branch dev) è esterna al confine del progetto ed è stata portata avanti solo per interessamento personale.
+
 Questo repository contiene il prototipo completo di un sistema di Workforce Management.
 Il progetto è stato sviluppato per il caso Fedrigoni Self-Adhesives Arco e si concentra su:
 - pianificazione turni e assegnazione postazioni,
