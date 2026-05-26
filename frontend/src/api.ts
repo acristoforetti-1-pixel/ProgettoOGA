@@ -28,6 +28,7 @@ export interface Shift {
   date: string;
   shiftTime: string;
   workstation: string;
+  isLocked?: boolean;
 }
 
 export interface Workstation {
@@ -66,6 +67,11 @@ export const fetchWorkstations = async () => {
 
 export const generateSchedule = async (startDate: string) => {
   const response = await api.post('/schedule/generate', { startDate });
+  return response.data;
+};
+
+export const saveManualShift = async (data: { employeeId: string, date: string, shiftTime?: string, workstation?: string, isLocked?: boolean, action?: 'delete', weekStartDate?: string }) => {
+  const response = await api.post('/schedule/manual', data);
   return response.data;
 };
 

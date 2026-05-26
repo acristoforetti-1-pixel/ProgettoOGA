@@ -12,7 +12,7 @@ export interface ScheduledShift {
   workstation: string;
 }
 
-export const generateSchedule = async (startDate: Date, days: number = 7) => {
+export const generateSchedule = async (startDate: Date, days: number = 7, lockedShifts: any[] = []) => {
   const employees = await Employee.find({ isActive: true });
   const competences = await Competence.find({ level: { $lte: 3 } }).populate('employee');
   const approvedAbsences = await Absence.find({ status: AbsenceStatus.APPROVED });
@@ -42,22 +42,35 @@ export const generateSchedule = async (startDate: Date, days: number = 7) => {
   const dailyRequirements = workstations.map(ws => ({
     name: ws.name,
     requiredCount: ws.defaultRequiredCount,
-    skipsNight: ws.skipsNight
-  }));
+    skipsNight: ws.skipsNight,
+    isCritical: ws.isCritical
+  })).sort((a, b) => (b.isCritical ? 1 : 0) - (a.isCritical ? 1 : 0));
 
 
   const tracking = new Map<string, Record<string, string>>();
 
+  lockedShifts.forEach(ls => {
+    const empId = ls.employee._id ? ls.employee._id.toString() : ls.employee.toString();
+    const lsDateStr = new Date(ls.date).toISOString().split('T')[0];
+    if (!tracking.has(empId)) tracking.set(empId, {});
+    tracking.get(empId)![lsDateStr] = ls.shiftTime;
+  });
+
   for (let dayOffset = 0; dayOffset < days; dayOffset++) {
     const currentDate = new Date(startDate);
-    currentDate.setDate(currentDate.getDate() + dayOffset);
+    currentDate.setUTCDate(currentDate.getUTCDate() + dayOffset);
     const dateStr = currentDate.toISOString().split('T')[0];
 
     const yesterday = new Date(currentDate);
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
 
     const assignedToday = new Set<string>();
+    const todaysLocked = lockedShifts.filter(ls => new Date(ls.date).toISOString().split('T')[0] === dateStr);
+    todaysLocked.forEach(ls => {
+        const empId = ls.employee._id ? ls.employee._id.toString() : ls.employee.toString();
+        assignedToday.add(empId);
+    });
 
     for (const shiftTime of shiftTimes) {
       const isNight = shiftTime === '21:00 - 05:00';
@@ -69,7 +82,8 @@ export const generateSchedule = async (startDate: Date, days: number = 7) => {
         const eligibleLevel1_2 = eligibleMap.get(req.name)?.level1_2 || [];
         const eligibleLevel3 = eligibleMap.get(req.name)?.level3 || [];
 
-        let assignedL1Count = 0;
+        const lockedAssignedL1 = todaysLocked.filter(ls => ls.workstation === req.name && ls.shiftTime === shiftTime);
+        let assignedL1Count = lockedAssignedL1.length;
         let assignedL3Count = 0;
 
         // Passaggio 1: Assegno Level 1/2

@@ -153,13 +153,14 @@ npm run dev
 ## Come usare il prototipo
 
 ### Ruoli utente
-- `OPERATOR`: visualizza il proprio turno e può inviare richieste di assenza.
-- `PLANNER`: gestisce competenze, genera schedule e approva assenze.
+- `OPERATOR`: visualizza il proprio turno e può inviare richieste di assenza. ES: username: mario password: password123 (dal seed)
+- `PLANNER`: gestisce competenze, genera schedule e approva assenze. ES: username: planner password: password123 (dal seed)
 
 ### Funzionalità chiave
 - consultazione della matrice di competenze,
 - gestione assenze e permessi,
 - generazione assistita della programmazione turni,
+- modifica manuale dei turni con ricalcolo automatico: bloccando manualmente una postazione per un operatore, l'algoritmo ricalcola in tempo reale le coperture, spostando le risorse per riempire le postazioni rimaste scoperte.
 - supporto alla gestione operativa del personale,
 - differenziazione UI tra operatori e planner.
 

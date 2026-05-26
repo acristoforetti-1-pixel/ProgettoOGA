@@ -151,10 +151,69 @@ app.post('/api/schedule/generate', protect, authorize('PLANNER', 'ADMIN'), async
   try {
     const { startDate } = req.body;
     const date = startDate ? new Date(startDate) : new Date();
-    const shifts = await generateSchedule(date, 7);
-    await ShiftAssignment.deleteMany({ date: { $gte: date } });
+    date.setUTCHours(0, 0, 0, 0); // ensure UTC midnight
+    
+    // Find locked shifts
+    const lockedShifts = await ShiftAssignment.find({ date: { $gte: date }, isLocked: true }).populate('employee');
+    
+    const shifts = await generateSchedule(date, 7, lockedShifts);
+    
+    // Delete only unlocked shifts
+    await ShiftAssignment.deleteMany({ date: { $gte: date }, isLocked: { $ne: true } });
+    
     const savedShifts = await ShiftAssignment.insertMany(shifts);
     res.json({ message: 'Schedule generated successfully', count: savedShifts.length });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Manual Shift Assignment
+app.post('/api/schedule/manual', protect, authorize('PLANNER', 'ADMIN'), async (req, res) => {
+  try {
+    const { employeeId, date, shiftTime, workstation, isLocked, action, weekStartDate } = req.body;
+    
+    // Parse date as UTC midnight
+    const shiftDate = new Date(date);
+    shiftDate.setUTCHours(0, 0, 0, 0);
+    
+    // Find existing shift for employee and date
+    let shift = await ShiftAssignment.findOne({ employee: employeeId, date: shiftDate });
+    
+    if (action === 'delete') {
+      if (shift) await shift.deleteOne();
+      return res.json({ message: 'Shift deleted successfully' });
+    }
+    
+    if (shift) {
+      shift.shiftTime = shiftTime;
+      shift.workstation = workstation;
+      shift.isLocked = isLocked !== undefined ? isLocked : true;
+      await shift.save();
+    } else {
+      shift = new ShiftAssignment({
+        employee: employeeId,
+        date: shiftDate,
+        shiftTime,
+        workstation,
+        isLocked: isLocked !== undefined ? isLocked : true
+      });
+      await shift.save();
+    }
+    
+    // Ricalcola se weekStartDate è presente
+    if (weekStartDate) {
+      const start = new Date(weekStartDate);
+      start.setUTCHours(0, 0, 0, 0);
+      const lockedShifts = await ShiftAssignment.find({ date: { $gte: start }, isLocked: true }).populate('employee');
+      const shifts = await generateSchedule(start, 7, lockedShifts);
+      
+      // Elimina solo i turni NON bloccati a partire da start
+      await ShiftAssignment.deleteMany({ date: { $gte: start }, isLocked: { $ne: true } });
+      await ShiftAssignment.insertMany(shifts);
+    }
+    
+    res.json(shift);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -197,8 +256,10 @@ app.put('/api/absences/:id', protect, authorize('PLANNER', 'ADMIN'), async (req,
     
     if (status === 'APPROVED' && absence) {
       const startDate = new Date();
-      const shifts = await generateSchedule(startDate, 7);
-      await ShiftAssignment.deleteMany({ date: { $gte: startDate } });
+      startDate.setUTCHours(0, 0, 0, 0);
+      const lockedShifts = await ShiftAssignment.find({ date: { $gte: startDate }, isLocked: true }).populate('employee');
+      const shifts = await generateSchedule(startDate, 7, lockedShifts);
+      await ShiftAssignment.deleteMany({ date: { $gte: startDate }, isLocked: { $ne: true } });
       await ShiftAssignment.insertMany(shifts);
     }
     
